@@ -1,0 +1,62 @@
+services:
+
+  app:
+    build:
+      context: ./Expense_Tracker
+      dockerfile: Dockerfile
+
+    container_name: project3_app
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      VAULT_ADDR: ${VAULT_ADDR}
+      VAULT_ROLE_ID: ${VAULT_ROLE_ID}
+      VAULT_SECRET_ID: ${VAULT_SECRET_ID}
+      DATABASE_HOST: db
+      DATABASE_NAME: course_recommendation_db
+      DATABASE_USER: postgres
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - project3_net
+
+
+  db:
+    image: postgres:16
+
+    container_name: project3_db
+
+    environment:
+      POSTGRES_DB: course_recommendation_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d course_recommendation_db"
+        ]
+
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - project3_net
+
+
+networks:
+  project3_net:
+
+
+volumes:
+  postgres_data:

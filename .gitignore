@@ -1,0 +1,10 @@
+.env
+
+vault/keys/
+vault/data/
+
+__pycache__/
+*.pyc
+
+*.log
+.DS_Store
