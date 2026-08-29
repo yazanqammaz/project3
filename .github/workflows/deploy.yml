@@ -13,6 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Load local environment file
+        run: |
+          cp ~/Desktop/project3/.env .env
+
       - name: Check Docker Compose
         run: docker compose config
 
@@ -20,8 +24,7 @@ jobs:
         run: docker compose build
 
       - name: Deploy application
-        run: |
-          docker compose up -d
+        run: docker compose up -d
 
       - name: Check containers
         run: docker ps
