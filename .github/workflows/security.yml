@@ -1,0 +1,85 @@
+name: Security Scanning
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security-scan:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create reports directory
+        run: mkdir -p security-reports
+
+      # -------------------------
+      # Bandit
+      # -------------------------
+      - name: Install Bandit
+        run: |
+          python3 -m pip install bandit
+
+      - name: Run Bandit
+        continue-on-error: true
+        run: |
+          bandit -r Expense_Tracker \
+            > security-reports/bandit.txt 2>&1 || true
+
+      # -------------------------
+      # Hadolint
+      # -------------------------
+      - name: Run Hadolint
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -v "$PWD:/project" \
+            hadolint/hadolint:latest \
+            hadolint /project/Expense_Tracker/Dockerfile \
+            > security-reports/hadolint.txt 2>&1 || true
+
+      # -------------------------
+      # TruffleHog
+      # -------------------------
+      - name: Run TruffleHog
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo" \
+            trufflesecurity/trufflehog:latest \
+            filesystem /repo \
+            --no-update \
+            > security-reports/trufflehog.txt 2>&1 || true
+
+      # -------------------------
+      # Show Reports
+      # -------------------------
+      - name: Show security reports
+        if: always()
+        run: |
+          echo "========== BANDIT =========="
+          cat security-reports/bandit.txt || true
+
+          echo "========== HADOLINT =========="
+          cat security-reports/hadolint.txt || true
+
+          echo "========== TRUFFLEHOG =========="
+          cat security-reports/trufflehog.txt || true
+
+      # -------------------------
+      # Save Reports
+      # -------------------------
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: security-reports/
