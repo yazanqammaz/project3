@@ -21,22 +21,18 @@ jobs:
       - name: Create reports directory
         run: mkdir -p security-reports
 
-      # -------------------------
-      # Bandit
-      # -------------------------
-      - name: Install Bandit
+      - name: Setup Bandit virtual environment
         run: |
-          python3 -m pip install bandit
+          python3 -m venv .bandit-venv
+          .bandit-venv/bin/pip install --upgrade pip
+          .bandit-venv/bin/pip install bandit
 
       - name: Run Bandit
         continue-on-error: true
         run: |
-          bandit -r Expense_Tracker \
+          .bandit-venv/bin/bandit -r Expense_Tracker \
             > security-reports/bandit.txt 2>&1 || true
 
-      # -------------------------
-      # Hadolint
-      # -------------------------
       - name: Run Hadolint
         continue-on-error: true
         run: |
@@ -46,9 +42,6 @@ jobs:
             hadolint /project/Expense_Tracker/Dockerfile \
             > security-reports/hadolint.txt 2>&1 || true
 
-      # -------------------------
-      # TruffleHog
-      # -------------------------
       - name: Run TruffleHog
         continue-on-error: true
         run: |
@@ -59,9 +52,6 @@ jobs:
             --no-update \
             > security-reports/trufflehog.txt 2>&1 || true
 
-      # -------------------------
-      # Show Reports
-      # -------------------------
       - name: Show security reports
         if: always()
         run: |
@@ -74,9 +64,6 @@ jobs:
           echo "========== TRUFFLEHOG =========="
           cat security-reports/trufflehog.txt || true
 
-      # -------------------------
-      # Save Reports
-      # -------------------------
       - name: Upload security reports
         if: always()
         uses: actions/upload-artifact@v4
