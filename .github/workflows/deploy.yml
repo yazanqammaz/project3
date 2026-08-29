@@ -16,13 +16,12 @@ jobs:
       - name: Check Docker Compose
         run: docker compose config
 
-      - name: Build containers
+      - name: Build application
         run: docker compose build
 
-      - name: Deploy
+      - name: Deploy application
         run: |
-          docker compose down
           docker compose up -d
 
-      - name: Show containers
+      - name: Check containers
         run: docker ps
